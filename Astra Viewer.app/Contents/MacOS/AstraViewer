@@ -1,0 +1,11 @@
+#!/bin/bash
+# Opens NiViewer from the dist/ folder next to this app.
+DIST="$(cd "$(dirname "$0")/../../.." && pwd)/dist"
+if [ ! -x "$DIST/NiViewer" ]; then
+  osascript -e 'display alert "Astra Viewer" message "Run Setup (run first).command in this folder first."'
+  exit 1
+fi
+cd "$DIST" && ./NiViewer
+if [ $? -ne 0 ]; then
+  osascript -e 'display alert "Astra Viewer" message "Couldn'"'"'t open the camera. Check it is plugged in and that Astra to Syphon is not running, then try again."'
+fi

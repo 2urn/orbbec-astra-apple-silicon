@@ -1,0 +1,66 @@
+diff --git a/Source/Drivers/PS1080/Sensor/XnDeviceEnumeration.cpp b/Source/Drivers/PS1080/Sensor/XnDeviceEnumeration.cpp
+index 5cfda9e..efc0620 100644
+--- a/Source/Drivers/PS1080/Sensor/XnDeviceEnumeration.cpp
++++ b/Source/Drivers/PS1080/Sensor/XnDeviceEnumeration.cpp
+@@ -37,6 +37,7 @@ XnDeviceEnumeration::XnUsbId XnDeviceEnumeration::ms_supportedProducts[] =
+ 	{ 0x1D27, 0x0600 },
+ 	{ 0x1D27, 0x0601 },
+ 	{ 0x1D27, 0x0609 },
++	{ 0x2BC5, 0x0401 },
+ };
+ 
+ XnUInt32 XnDeviceEnumeration::ms_supportedProductsCount = sizeof(XnDeviceEnumeration::ms_supportedProducts) / sizeof(XnDeviceEnumeration::ms_supportedProducts[0]);
+diff --git a/ThirdParty/GL/glh/glh_linear.h b/ThirdParty/GL/glh/glh_linear.h
+index 422c05f..6400387 100644
+--- a/ThirdParty/GL/glh/glh_linear.h
++++ b/ThirdParty/GL/glh/glh_linear.h
+@@ -48,6 +48,10 @@ glh_linear.h
+ 
+ #ifndef GLH_LINEAR_H
+ #define GLH_LINEAR_H
++#include <vector>
++#include <functional>
++#include <string>
++#include <system_error>
+ 
+ #include <memory.h>
+ #include <math.h>
+diff --git a/ThirdParty/PSCommon/BuildSystem/CommonDefs.mak b/ThirdParty/PSCommon/BuildSystem/CommonDefs.mak
+index dd88b04..42573c0 100644
+--- a/ThirdParty/PSCommon/BuildSystem/CommonDefs.mak
++++ b/ThirdParty/PSCommon/BuildSystem/CommonDefs.mak
+@@ -8,7 +8,9 @@ endif
+ 
+ # find out the platform on which we're running
+ MACHINE = $(shell uname -m)
+-ifneq (,$(findstring x86_64,$(MACHINE)))
++ifeq ($(MACHINE),arm64)
++	HOST_PLATFORM = Arm64
++else ifneq (,$(findstring x86_64,$(MACHINE)))
+ 	HOST_PLATFORM = x64
+ else ifneq (,$(findstring x86,$(MACHINE)))
+ 	HOST_PLATFORM = x86
+diff --git a/ThirdParty/PSCommon/BuildSystem/Platform.Arm64 b/ThirdParty/PSCommon/BuildSystem/Platform.Arm64
+new file mode 100644
+index 0000000..031ba2c
+--- /dev/null
++++ b/ThirdParty/PSCommon/BuildSystem/Platform.Arm64
+@@ -0,0 +1,5 @@
++# Apple Silicon (macOS arm64)
++export GLUT_SUPPORTED=1
++P=$(LIBUSB_PREFIX)
++CFLAGS += -arch arm64 -O2 -I$(P)/include -Wno-error -std=c++11
++LDFLAGS += -arch arm64 -L$(P)/lib -Wl,-rpath,$(P)/lib
+diff --git a/ThirdParty/PSCommon/XnLib/Source/Linux/XnLinuxUSB.cpp b/ThirdParty/PSCommon/XnLib/Source/Linux/XnLinuxUSB.cpp
+index 3db8048..593e61d 100644
+--- a/ThirdParty/PSCommon/XnLib/Source/Linux/XnLinuxUSB.cpp
++++ b/ThirdParty/PSCommon/XnLib/Source/Linux/XnLinuxUSB.cpp
+@@ -754,7 +754,7 @@ XN_C_API XnStatus xnUSBOpenDeviceByPath(const XnUSBConnectionString strDevicePat
+ 	XnUInt8 nAddress = 0;
+ 	sscanf(strDevicePath, "%hx/%hx@%hhu/%hhu", &nVendorID, &nProductID, &nBus, &nAddress);
+ 	
+-	if (nVendorID == 0 || nProductID == 0 || nBus == 0 || nAddress == 0)
++	if (nVendorID == 0 || nProductID == 0 || nAddress == 0)
+ 	{
+ 		XN_LOG_WARNING_RETURN(XN_STATUS_USB_DEVICE_OPEN_FAILED, "Invalid connection string: %s", strDevicePath);
+ 	}
